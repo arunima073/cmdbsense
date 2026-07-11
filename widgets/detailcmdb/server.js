@@ -3,6 +3,66 @@
     data.match = {};
     data.attributes = [];
     data.signalChart = [];
+	  if (input && input.action == "reject") {
+
+
+        if (!input.reason) {
+
+            data.error = "Reason is mandatory";
+            return;
+
+        }
+
+
+        var matchGR = new GlideRecord(
+            "x_angda_avante_c_0_match_score"
+        );
+
+
+        if (!matchGR.get(input.match_id)) {
+
+            data.error = "Match record not found";
+            return;
+
+        }
+
+
+
+        // Create NOT DUPLICATE record
+
+        var nd = new GlideRecord(
+            "x_angda_avante_c_0_not_duplicate"
+        );
+
+
+        nd.initialize();
+
+
+        nd.u_ci_a = matchGR.u_ci_a;
+        nd.u_ci_b = matchGR.u_ci_b;
+        nd.u_recorded_by = gs.getUserID();
+        nd.u_recorded_at = new GlideDateTime();
+        nd.u_reason = input.reason;
+
+
+        nd.insert();
+
+
+
+        // Update match score
+
+        matchGR.u_decision = "Reject";
+        matchGR.update();
+
+
+
+        data.success = true;
+
+
+        return;
+
+    }
+
 
     var matchId = $sp.getParameter("sys_id");
 
