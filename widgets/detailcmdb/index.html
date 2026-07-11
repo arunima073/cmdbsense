@@ -4,100 +4,219 @@
         <h3>CMDB Review Detail</h3>
     </div>
 
+
     <div class="panel-body">
 
-        <p><b>Score:</b> {{data.match.score}}</p>
-        <p><b>Decision:</b> {{data.match.decision}}</p>
-        <p><b>Computed:</b> {{data.match.computed_at}}</p>
+
+        <p>
+            <b>Score:</b> {{data.match.score}}
+        </p>
+
+        <p>
+            <b>Decision:</b> {{data.match.decision}}
+        </p>
+
+        <p>
+            <b>Computed:</b> {{data.match.computed_at}}
+        </p>
+
 
         <hr>
 
+
+        <!-- Reject Action -->
+
+        <div ng-if="data.match.decision=='Steward-review'">
+
+            <div class="form-group">
+
+                <label>
+                    Rejection Reason
+                </label>
+
+                <textarea class="form-control"
+                          rows="3"
+                          ng-model="data.rejectReason"
+                          placeholder="Enter reason for rejecting this match">
+                </textarea>
+
+            </div>
+
+
+            <button class="btn btn-danger"
+                    ng-click="c.rejectMatch()">
+
+                Reject Match
+
+            </button>
+
+
+        </div>
+
+
+        <hr>
+
+
+
         <div class="row">
+
 
             <!-- CI A -->
 
             <div class="col-md-5">
 
-                <h4>CI A - {{data.match.ci_a}}</h4>
+
+                <h4>
+                    CI A - {{data.match.ci_a}}
+                </h4>
+
 
                 <table class="table table-bordered">
 
+
                     <tr>
-                        <th>Attribute</th>
-                        <th>Value</th>
+
+                        <th>
+                            Attribute
+                        </th>
+
+                        <th>
+                            Value
+                        </th>
+
                     </tr>
+
 
                     <tr ng-repeat="a in data.attributes">
 
-                        <td>{{a.label}}</td>
+
+                        <td>
+                            {{a.label}}
+                        </td>
+
 
                         <td ng-class="a.status">
+
                             {{a.ci_a || "-"}}
+
                         </td>
+
 
                     </tr>
 
+
                 </table>
+
 
             </div>
 
 
+
+
             <!-- Signal Breakdown -->
+
 
             <div class="col-md-2">
 
-                <h4>Signal Contribution</h4>
 
-                <div ng-repeat="s in data.signalChart" style="margin-bottom:15px;">
+                <h4>
+                    Signal Contribution
+                </h4>
 
-                    <strong>{{s.label}}</strong>
+
+                <div ng-repeat="s in data.signalChart"
+                     style="margin-bottom:15px;">
+
+
+                    <strong>
+                        {{s.label}}
+                    </strong>
+
 
                     <div class="progress">
+
 
                         <div class="progress-bar progress-bar-info"
                              role="progressbar"
                              style="width: {{s.contribution*100}}%;">
 
+
                             {{(s.contribution*100) | number:1}}%
+
 
                         </div>
 
+
                     </div>
+
 
                 </div>
 
+
             </div>
+
+
 
 
             <!-- CI B -->
 
+
             <div class="col-md-5">
 
-                <h4>CI B - {{data.match.ci_b}}</h4>
+
+                <h4>
+                    CI B - {{data.match.ci_b}}
+                </h4>
+
 
                 <table class="table table-bordered">
 
+
                     <tr>
-                        <th>Attribute</th>
-                        <th>Value</th>
+
+                        <th>
+                            Attribute
+                        </th>
+
+                        <th>
+                            Value
+                        </th>
+
                     </tr>
+
 
                     <tr ng-repeat="a in data.attributes">
 
-                        <td>{{a.label}}</td>
+
+                        <td>
+                            {{a.label}}
+                        </td>
+
 
                         <td ng-class="a.status">
+
                             {{a.ci_b || "-"}}
+
                         </td>
+
 
                     </tr>
 
+
                 </table>
+
 
             </div>
 
+
+
         </div>
+
 
     </div>
 
+
 </div>
+
+
+<hr>
