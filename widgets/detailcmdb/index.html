@@ -1,154 +1,103 @@
 <div class="panel panel-default">
 
+    <div class="panel-heading">
+        <h3>CMDB Review Detail</h3>
+    </div>
 
-<div class="panel-heading">
+    <div class="panel-body">
 
-<h3>
-CMDB Review Detail
-</h3>
+        <p><b>Score:</b> {{data.match.score}}</p>
+        <p><b>Decision:</b> {{data.match.decision}}</p>
+        <p><b>Computed:</b> {{data.match.computed_at}}</p>
 
-</div>
+        <hr>
 
+        <div class="row">
 
-<div class="panel-body">
+            <!-- CI A -->
 
+            <div class="col-md-5">
 
-<p>
-<b>Score:</b> {{data.match.score}}
-</p>
+                <h4>CI A - {{data.match.ci_a}}</h4>
 
-<p>
-<b>Decision:</b> {{data.match.decision}}
-</p>
+                <table class="table table-bordered">
 
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                    </tr>
 
-<hr>
+                    <tr ng-repeat="a in data.attributes">
 
+                        <td>{{a.label}}</td>
 
-<div class="row">
+                        <td ng-class="a.status">
+                            {{a.ci_a || "-"}}
+                        </td>
 
+                    </tr>
 
-<!-- CI A -->
+                </table>
 
-<div class="col-md-5">
+            </div>
 
-<h4>
-CI A - {{data.match.ci_a}}
-</h4>
 
+            <!-- Signal Breakdown -->
 
-<table class="table">
+            <div class="col-md-2">
 
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
+                <h4>Signal Contribution</h4>
 
+                <div ng-repeat="s in data.signalChart" style="margin-bottom:15px;">
 
-<tr ng-repeat="a in data.attributes">
+                    <strong>{{s.label}}</strong>
 
-<td>
-{{a.label}}
-</td>
+                    <div class="progress">
 
+                        <div class="progress-bar progress-bar-info"
+                             role="progressbar"
+                             style="width: {{s.contribution*100}}%;">
 
-<td ng-class="a.status">
+                            {{(s.contribution*100) | number:1}}%
 
-{{a.ci_a || '-'}}
+                        </div>
 
-</td>
+                    </div>
 
+                </div>
 
-</tr>
+            </div>
 
 
-</table>
+            <!-- CI B -->
 
-</div>
+            <div class="col-md-5">
 
+                <h4>CI B - {{data.match.ci_b}}</h4>
 
+                <table class="table table-bordered">
 
-<!-- Signals -->
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                    </tr>
 
-<div class="col-md-2">
+                    <tr ng-repeat="a in data.attributes">
 
+                        <td>{{a.label}}</td>
 
-<h4>
-Signals
-</h4>
+                        <td ng-class="a.status">
+                            {{a.ci_b || "-"}}
+                        </td>
 
+                    </tr>
 
-<table class="table">
+                </table>
 
+            </div>
 
-<tr ng-repeat="(key,value) in data.signals">
+        </div>
 
-<td>
-{{key}}
-</td>
-
-<td>
-{{value}}
-</td>
-
-</tr>
-
-
-</table>
-
-
-</div>
-
-
-
-
-<!-- CI B -->
-
-<div class="col-md-5">
-
-
-<h4>
-CI B - {{data.match.ci_b}}
-</h4>
-
-
-<table class="table">
-
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-
-
-<tr ng-repeat="a in data.attributes">
-
-
-<td>
-{{a.label}}
-</td>
-
-
-<td ng-class="a.status">
-
-{{a.ci_b || '-'}}
-
-</td>
-
-
-</tr>
-
-
-</table>
-
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
+    </div>
 
 </div>
