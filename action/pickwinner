@@ -1,0 +1,39 @@
+(function execute(inputs, outputs) {
+
+    var ciA = new GlideRecord('cmdb_ci');
+    ciA.get(inputs.ci_a);
+
+    var ciB = new GlideRecord('cmdb_ci');
+    ciB.get(inputs.ci_b);
+
+    var picker = new x_angda_avante_c_0.AvnCmdbWinnerPicker();
+    var winner = picker.pick(ciA, ciB);
+    
+    gs.info("Winner object = " + winner);
+    gs.info("Winner class = " + Object.prototype.toString.call(winner));
+    
+    gs.info("Winner sys_id = " + winner.getUniqueValue());
+    gs.info("Winner table = " + winner.getTableName());
+    gs.info("Winner display = " + winner.getDisplayValue());
+
+    outputs.winner_ci = winner.getUniqueValue();
+
+    //outputs.winner_ci = picker.pick(ciA, ciB);
+    gs.info("Winner is"+ outputs.winner_ci);
+
+   // if (outputs.winner_ci.getUniqueValue() == ciA.getUniqueValue()) {
+   //     outputs.loser_ci = ciB;
+   // } else {
+   //     outputs.loser_ci = ciA;
+   // }
+
+    /*if (winner.getUniqueValue() == ciA.getUniqueValue()) {
+    outputs.loser_ci = ciB.getUniqueValue();
+    }   else {
+    outputs.loser_ci = ciA.getUniqueValue();
+    }*/
+
+    var loser = (winner.getUniqueValue() == ciA.getUniqueValue()) ? ciB : ciA;
+    outputs.loser_ci = loser.getUniqueValue();
+
+})(inputs, outputs);
