@@ -1,0 +1,21 @@
+var rel = new GlideRecord('cmdb_rel_ci');
+rel.addQuery('parent', inputs.loser_ci.sys_id);
+rel.addOrCondition('child', inputs.loser_ci.sys_id);
+rel.query();
+
+while (rel.next()) {
+
+    if (rel.parent.toString() == inputs.loser_ci.sys_id.toString()) {
+        rel.parent = inputs.winner_ci.sys_id;
+    }
+
+    if (rel.child.toString() == inputs.loser_ci.sys_id.toString()) {
+        rel.child = inputs.winner_ci.sys_id;
+    }
+
+    try {
+        rel.update();
+    } catch (e) {
+        rel.deleteRecord();
+    }
+}
