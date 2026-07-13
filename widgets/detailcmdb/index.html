@@ -24,23 +24,36 @@
         <hr>
 
 
-        <!-- Reject Action -->
+        <!-- Steward Actions -->
 
         <div ng-if="data.match.decision=='Steward-review'">
+
 
             <div class="form-group">
 
                 <label>
-                    Rejection Reason
+                    Action Reason
                 </label>
+
 
                 <textarea class="form-control"
                           rows="3"
-                          ng-model="data.rejectReason"
-                          placeholder="Enter reason for rejecting this match">
+                          ng-model="data.actionReason"
+                          placeholder="Enter reason">
                 </textarea>
 
+
             </div>
+
+
+
+            <button class="btn btn-success"
+                    ng-click="c.approveMatch()">
+
+                Approve Merge
+
+            </button>
+
 
 
             <button class="btn btn-danger"
@@ -49,13 +62,16 @@
                 Reject Match
 
             </button>
-             
+
+
+
             <button class="btn btn-default"
-            ng-click="c.skipMatch()">
+                    ng-click="c.skipMatch()">
 
                 Skip
 
             </button>
+
 
 
         </div>
