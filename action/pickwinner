@@ -1,39 +1,162 @@
 (function execute(inputs, outputs) {
 
+
+    // Load CI A
     var ciA = new GlideRecord('cmdb_ci');
-    ciA.get(inputs.ci_a);
 
+    if (!ciA.get(inputs.ci_a)) {
+
+        gs.error("CI A not found: " + inputs.ci_a);
+        return;
+
+    }
+
+
+    // Reload CI A using actual class
+    var ciATable = ciA.getValue('sys_class_name');
+
+    gs.info(
+        "CI A Class = " + ciATable
+    );
+
+
+    if (ciATable) {
+
+        var ciAActual = new GlideRecord(ciATable);
+
+        if (ciAActual.get(inputs.ci_a)) {
+            ciA = ciAActual;
+        }
+
+    }
+
+
+
+
+
+    // Load CI B
     var ciB = new GlideRecord('cmdb_ci');
-    ciB.get(inputs.ci_b);
 
-    var picker = new x_angda_avante_c_0.AvnCmdbWinnerPicker();
-    var winner = picker.pick(ciA, ciB);
-    
-    gs.info("Winner object = " + winner);
-    gs.info("Winner class = " + Object.prototype.toString.call(winner));
-    
-    gs.info("Winner sys_id = " + winner.getUniqueValue());
-    gs.info("Winner table = " + winner.getTableName());
-    gs.info("Winner display = " + winner.getDisplayValue());
+    if (!ciB.get(inputs.ci_b)) {
 
-    outputs.winner_ci = winner.getUniqueValue();
+        gs.error("CI B not found: " + inputs.ci_b);
+        return;
 
-    //outputs.winner_ci = picker.pick(ciA, ciB);
-    gs.info("Winner is"+ outputs.winner_ci);
+    }
 
-   // if (outputs.winner_ci.getUniqueValue() == ciA.getUniqueValue()) {
-   //     outputs.loser_ci = ciB;
-   // } else {
-   //     outputs.loser_ci = ciA;
-   // }
 
-    /*if (winner.getUniqueValue() == ciA.getUniqueValue()) {
-    outputs.loser_ci = ciB.getUniqueValue();
-    }   else {
-    outputs.loser_ci = ciA.getUniqueValue();
-    }*/
+    // Reload CI B using actual class
+    var ciBTable = ciB.getValue('sys_class_name');
 
-    var loser = (winner.getUniqueValue() == ciA.getUniqueValue()) ? ciB : ciA;
-    outputs.loser_ci = loser.getUniqueValue();
+    gs.info(
+        "CI B Class = " + ciBTable
+    );
+
+
+    if (ciBTable) {
+
+        var ciBActual = new GlideRecord(ciBTable);
+
+        if (ciBActual.get(inputs.ci_b)) {
+            ciB = ciBActual;
+        }
+
+    }
+
+
+
+
+
+
+    gs.info("CI A = " + ciA.getDisplayValue());
+    gs.info("CI B = " + ciB.getDisplayValue());
+
+    gs.info(
+        "CI A sys_class_name = " +
+        ciA.getValue('sys_class_name')
+    );
+
+    gs.info(
+        "CI B sys_class_name = " +
+        ciB.getValue('sys_class_name')
+    );
+
+
+
+
+
+
+    // Call Winner Picker
+
+    var picker =
+        new x_angda_avante_c_0.AvnCmdbWinnerPicker();
+
+
+
+    var winner =
+        picker.pick(
+            ciA,
+            ciB
+        );
+
+
+
+
+
+    gs.info(
+        "Winner = " +
+        winner.getDisplayValue()
+    );
+
+    gs.info(
+        "Winner sys_id = " +
+        winner.getUniqueValue()
+    );
+
+
+
+
+
+
+    outputs.winner_ci =
+        winner.getUniqueValue();
+
+
+
+
+
+    // Determine loser
+
+    var loser;
+
+
+    if (
+        winner.getUniqueValue() ==
+        ciA.getUniqueValue()
+    ) {
+
+        loser = ciB;
+
+    }
+    else {
+
+        loser = ciA;
+
+    }
+
+
+
+
+    outputs.loser_ci =
+        loser.getUniqueValue();
+
+
+
+    gs.info(
+        "Loser = " +
+        loser.getDisplayValue()
+    );
+
+
 
 })(inputs, outputs);
