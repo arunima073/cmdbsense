@@ -1,0 +1,29 @@
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>CI A</th>
+            <th>CI B</th>
+            <th>Score</th>
+            <th>Decision</th>
+            <th>Computed At</th>
+            
+           
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr ng-repeat="m in data.matches"
+    ng-click="c.openDetail(m.sys_id)"
+    style="cursor:pointer">
+
+            <td>{{m.ci_a}}</td>
+            <td>{{m.ci_b}}</td>
+            <td>{{m.score}}</td>
+            <td>{{m.decision}}</td>
+            <td>{{m.computed_at}}</td>
+            
+            
+
+        </tr>
+    </tbody>
+</table>
