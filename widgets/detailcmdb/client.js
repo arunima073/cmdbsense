@@ -36,4 +36,14 @@ api.controller=function($scope) {
 
     };
 	
+	  c.skipMatch = function(){
+
+
+					window.location.href =
+					"?id=cmdb_review";
+
+
+		};
+	
+	
 };
