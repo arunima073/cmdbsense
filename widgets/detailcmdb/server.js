@@ -66,7 +66,139 @@
     }
 
 
+    // ----------------------------
+		// Approve Action
+		// ----------------------------
 
+
+		if(input && input.action=="approve"){
+
+
+
+				if(!input.reason){
+
+
+						data.error =
+						"Reason is mandatory";
+
+
+						return;
+
+
+				}
+
+
+
+
+
+				var matchApprove =
+						new GlideRecord(
+						"x_angda_avante_c_0_match_score"
+						);
+
+
+
+				if(!matchApprove.get(input.match_id)){
+
+
+						data.error =
+						"Match record not found";
+
+
+						return;
+
+
+				}
+
+
+
+
+				// Create Merge Log
+
+
+				var mergeLog =
+						new GlideRecord(
+						"x_angda_avante_c_0_merge_log"
+						);
+
+
+
+				mergeLog.initialize();
+
+
+
+
+				// CI A becomes winner
+				// CI B becomes loser
+
+
+				mergeLog.u_winner =
+						matchApprove.u_ci_a;
+
+
+
+				mergeLog.u_loser =
+						matchApprove.u_ci_b;
+
+
+
+				mergeLog.u_steward =
+						gs.getUserID();
+
+
+
+				mergeLog.u_decision_type =
+						"Manual";
+
+
+
+				mergeLog.u_reason =
+						input.reason;
+
+
+
+				mergeLog.u_score_at_merge =
+						matchApprove.u_score;
+
+
+
+				mergeLog.u_merged_at =
+						new GlideDateTime();
+
+
+
+				mergeLog.u_match_score_ref =
+						matchApprove.sys_id;
+
+
+
+				mergeLog.insert();
+
+
+
+
+
+				// Update Match Score
+
+
+				matchApprove.u_decision =
+						"Auto-merge";
+
+
+
+				matchApprove.update();
+
+
+
+
+
+				data.success=true;
+
+
+				return;
+
+
+		}
 
     // ----------------------------
     // Get Match Record
