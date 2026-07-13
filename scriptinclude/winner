@@ -1,0 +1,103 @@
+var AvnCmdbWinnerPicker = Class.create();
+AvnCmdbWinnerPicker.prototype = {
+    
+	initialize: function() {
+    gs.info("Entry into - Script Include CI to Action Pick Winner: ");
+	},
+   
+    //gs.info("Entry into - Script Include CI to Action Pick Winner: ");
+    
+	pick: function(a, b) {
+
+        gs.info("Entry into function - Script Include CI to Action Pick Winner: " + a + b);
+        // Read winner strategy from system property
+        var strat = (new x_angda_avante_c_0.AvnCmdbProperties())
+            .get('merge.winner_strategy', 'older');
+
+        // Strategy 1 - Older CI wins
+        if (strat == 'older') {
+
+            return new GlideDateTime(a.sys_created_on + '')
+                .compareTo(new GlideDateTime(b.sys_created_on + '')) < 0 ? a : b;
+        }
+
+        // Strategy 2 - CI with more populated attributes wins
+        if (strat == 'more_attributes') {
+
+            var countA = this._countAttrs(a);
+            var countB = this._countAttrs(b);
+
+            //gs.info("CI : " + a.name + " -> Populated Fields = " + countA);
+            //gs.info("CI : " + b.name + " -> Populated Fields = " + countB);
+
+            return (countA >= countB) ? a : b;
+        }
+
+        // Strategy 3 - Source Priority
+        // TODO : Implement in Story 39/40 (as per project roadmap)
+        gs.info("Script Include CI to Action Pick Winner: " + a);
+
+        return a;
+    },
+
+    _countAttrs: function(ci) {
+
+        // Open the record using its actual class
+        var gr = new GlideRecord(ci.getValue('sys_class_name'));
+
+        if (!gr.get(ci.getUniqueValue())) {
+            return 0;
+        }
+
+        var fields = [
+            'name',
+            'manufacturer',
+            'company',
+            'model_id',
+            'assigned_to',
+            'asset',
+            'asset_tag',
+            'serial_number',
+            'os',
+            'os_version',
+            'os_service_pack',
+            'ram',
+            'cpu_count',
+            'cpu_core_count',
+            'cpu_speed',
+            'cpu_type',
+            'cpu_manufacturer',
+            'dns_domain',
+            'disk_space',
+            'description'
+        ];
+
+        var count = 0;
+
+       // gs.info("----------- Checking CI : " + gr.getDisplayValue('name') + " -----------");
+
+        for (var i = 0; i < fields.length; i++) {
+
+            var fieldName = fields[i];
+
+            // Skip fields that don't exist for this CI class
+            if (!gr.isValidField(fieldName)) {
+                continue;
+            }
+
+            var value = gr.getValue(fieldName);
+
+            if (!gs.nil(value) && value !== '') {
+
+               // gs.info(fieldName + " = " + value);
+                count++;
+            }
+        }
+
+        gs.info("Total Populated Fields = " + count);
+
+        return count;
+    },
+
+    type: 'AvnCmdbWinnerPicker'
+};
