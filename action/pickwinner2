@@ -1,0 +1,139 @@
+(function execute(inputs, outputs) {
+
+    gs.info("=== PICK WINNER ACTION STARTED ===");
+    gs.info("The value is of cia is " + inputs.parameter.getUniqueValue());
+    gs.info("The value is of cib is " + inputs.parameter1.getUniqueValue());
+    
+
+
+    // Load CI A
+    var ciA = new GlideRecord('cmdb_ci');
+
+    if (!ciA.get(inputs.ci_a)) {
+        gs.error("CI A not found now: " + inputs.ci_a);
+        return;
+    }
+
+    var ciATable = ciA.getValue('sys_class_name');
+
+    gs.info("CI A class = " + ciATable);
+
+    // Reload using actual class
+    if (ciATable) {
+
+        var ciAActual = new GlideRecord(ciATable);
+
+        if (ciAActual.get(inputs.ci_a)) {
+            ciA = ciAActual;
+        }
+
+    }
+
+
+    // Load CI B
+    var ciB = new GlideRecord('cmdb_ci');
+
+    if (!ciB.get(inputs.ci_b)) {
+        gs.error("CI B not found: " + inputs.ci_b);
+        return;
+    }
+
+    var ciBTable = ciB.getValue('sys_class_name');
+
+    gs.info("CI B class = " + ciBTable);
+
+
+    // Reload using actual class
+    if (ciBTable) {
+
+        var ciBActual = new GlideRecord(ciBTable);
+
+        if (ciBActual.get(inputs.ci_b)) {
+            ciB = ciBActual;
+        }
+
+    }
+
+
+    gs.info("CI A = " + ciA.getDisplayValue());
+    gs.info("CI B = " + ciB.getDisplayValue());
+
+    gs.info("Calling Winner Picker");
+
+
+    // Call Winner Picker
+    var picker = new x_angda_avante_c_0.AvnCmdbWinnerPicker();
+
+
+    var winner;
+
+    try {
+
+        winner = picker.pick(ciA, ciB);
+
+    } catch (e) {
+
+        gs.error("Winner Picker failed: " + e.message);
+        return;
+
+    }
+
+
+    gs.info("Picker returned: " + winner);
+
+
+    if (!winner) {
+
+        gs.error("Winner Picker returned NULL");
+
+        return;
+
+    }
+
+
+    gs.info(
+        "Winner = " + winner.getDisplayValue()
+    );
+
+
+    gs.info(
+        "Winner sys_id = " + winner.getUniqueValue()
+    );
+
+
+    outputs.winner_ci = winner.getUniqueValue();
+
+
+
+    // Determine loser
+    var loser;
+
+
+    if (winner.getUniqueValue() == ciA.getUniqueValue()) {
+
+        loser = ciB;
+
+    } else {
+
+        loser = ciA;
+
+    }
+
+
+    gs.info(
+        "Loser = " + loser.getDisplayValue()
+    );
+
+
+    gs.info(
+        "Loser sys_id = " + loser.getUniqueValue()
+    );
+
+
+    outputs.loser_ci = loser.getUniqueValue();
+
+
+    gs.info("=== PICK WINNER ACTION COMPLETED ===");
+
+
+})(inputs, outputs);
