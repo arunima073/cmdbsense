@@ -8,6 +8,18 @@ AvnCmdbScorer.prototype = {
         if (ciA.sys_class_name.toString() !== ciB.sys_class_name.toString()) {
             return {score:0, signals:{}, decision:'Reject', reason:'Different CI class'};
         }
+	
+		if (this._isMarkedNotDuplicate(ciA.getUniqueValue(),
+    ciB.getUniqueValue())) {
+
+			return {
+				score:0,
+				signals:{},
+				decision:'Reject',
+				reason:'Previously marked as not duplicate'
+			};
+
+		}
         var weights = this._getWeights(ciA.sys_class_name.toString());
         var totalW = 0, totalS = 0, breakdown = {};
         weights.forEach(function(w) {
@@ -185,6 +197,37 @@ AvnCmdbScorer.prototype = {
         return 'Reject';
     },
 
+	_isMarkedNotDuplicate: function(ciAId, ciBId) {
+
+		gs.info('===== NOT DUP DEBUG =====');
+		gs.info('ciAId=[' + ciAId + '] length=' + ciAId.length);
+		gs.info('ciBId=[' + ciBId + '] length=' + ciBId.length);
+
+		ciAId = ciAId.trim();
+		ciBId = ciBId.trim();
+
+		gs.info('After trim');
+		gs.info('ciAId=[' + ciAId + '] length=' + ciAId.length);
+		gs.info('ciBId=[' + ciBId + '] length=' + ciBId.length);
+
+
+		var gr = new GlideRecord('x_angda_avante_c_0_not_duplicate');
+
+		gr.addQuery('u_ci_a', ciBId);
+		gr.addQuery('u_ci_b', ciAId);
+
+		gr.query();
+
+		gs.info('Reverse query count: ' + gr.getRowCount());
+
+		if (gr.next()) {
+			gs.info('FOUND: ' + gr.sys_id);
+			return true;
+		}
+
+		gs.info('NOT FOUND');
+		return false;
+	},
 	persist: function(ciA, ciB, scoreResult) {
 
 		var reject = this.props.getNum('match.reject_threshold', 0.30);
