@@ -1,103 +1,220 @@
-var AvnCmdbWinnerPicker = Class.create();
-AvnCmdbWinnerPicker.prototype = {
-    
-	initialize: function() {
-    gs.info("Entry into - Script Include CI to Action Pick Winner: ");
+var AvnCmdbScorer = Class.create();
+AvnCmdbScorer.prototype = {
+    initialize: function() {
+        this.props = new x_angda_avante_c_0.AvnCmdbProperties();
+    },
+
+    score: function(ciA, ciB) {
+        if (ciA.sys_class_name.toString() !== ciB.sys_class_name.toString()) {
+            return {score:0, signals:{}, decision:'Reject', reason:'Different CI class'};
+        }
+        var weights = this._getWeights(ciA.sys_class_name.toString());
+        var totalW = 0, totalS = 0, breakdown = {};
+        weights.forEach(function(w) {
+            var metric = w.metric;
+
+			if (w.signal === 'mac_address') metric = 'mac';
+			else if (w.signal === 'serial_number') metric = 'serial';
+			else if (w.signal === 'ip_address') metric = 'ip';
+			else if (w.signal === 'fqdn') metric = 'fqdn';
+
+
+			// Get values
+			var valueA = ciA[w.signal] ? ciA[w.signal].toString().trim() : '';
+			var valueB = ciB[w.signal] ? ciB[w.signal].toString().trim() : '';
+
+
+			
+			if (!valueA || !valueB) {
+				breakdown[w.signal] = 'ignored';
+				return;
+			}
+
+
+			var sim = this._similarity(
+				valueA,
+				valueB,
+				metric
+			);
+
+
+			breakdown[w.signal] = sim;
+
+			totalS += sim * w.weight;
+			totalW += w.weight;
+
+        }, this);
+        var score = totalW > 0 ? (totalS / totalW) : 0;
+        var decision = this._decide(score);
+		var result = {
+			score: score,
+			signals: breakdown,
+			decision: decision
+		};
+		this.persist(ciA, ciB, result);
+
+        return {score: score, signals: breakdown, decision: decision};
+    },
+
+    _getWeights: function(ciClass) {
+        var arr = [];
+        var gr = new GlideRecord('x_angda_avante_c_0_signal_weight');
+        gr.addQuery('u_ci_class', ciClass);
+        gr.addQuery('u_active', true);
+        gr.query();
+        while (gr.next()) {
+            arr.push({signal: gr.u_signal+'', weight: parseFloat(gr.u_weight+''), metric: 'auto'});
+        }
+        return arr;
+    },
+
+    _similarity: function(a, b, metric) {
+
+		if (!a || !b)
+			return 0;
+
+		// MAC comparison
+		if (metric === 'mac') {
+
+			var na = a.replace(/[^a-fA-F0-9]/g, '').toLowerCase();
+			var nb = b.replace(/[^a-fA-F0-9]/g, '').toLowerCase();
+
+			if (na.length !== 12 || nb.length !== 12)
+				return 0;
+
+			return na === nb ? 1.0 : 0.0;
+		}
+
+		a = a.toLowerCase().trim();
+		b = b.toLowerCase().trim();
+
+		if (metric === 'serial' || /serial/i.test(metric)) {
+            return a === b ? 1.0 : 0.0;
+        }
+
+		if (metric === 'fqdn') {
+			if (a === b) return 1.0;
+			if (a.endsWith('.'+b) || b.endsWith('.'+a)) return 0.85; // subdomain match
+			var hostA = a.split('.')[0], hostB = b.split('.')[0];
+			if (hostA === hostB) return 0.65; // hostname match only
+			return 0;
+		}
+
+
+		if (metric === 'ip') {
+
+			var as = (a || '').split(/[,\s]+/).filter(Boolean);
+			var bs = (b || '').split(/[,\s]+/).filter(Boolean);
+
+			if (!as.length || !bs.length)
+				return 0;
+
+			var setA = {};
+			var setB = {};
+
+			as.forEach(function(x) {
+				setA[x] = true;
+			});
+
+			bs.forEach(function(x) {
+				setB[x] = true;
+			});
+
+			var inter = 0;
+			var union = 0;
+
+			Object.keys(setA).forEach(function(k) {
+				if (setB[k])
+					inter++;
+				union++;
+			});
+
+			Object.keys(setB).forEach(function(k) {
+				if (!setA[k])
+					union++;
+				});
+
+			return union ? inter / union : 0;
+		}
+
+		if (a === b)
+			return 1.0;
+
+		return this._jaroWinkler(a, b);
+
+		
+    },
+
+    _jaroWinkler: function(s1, s2) {
+		if (s1 === s2) return 1.0;
+		if (!s1.length || !s2.length) return 0.0;
+		var matchDistance = Math.floor(Math.max(s1.length,s2.length)/2)-1;
+		var s1Matches = [], s2Matches = [];
+		var matches = 0, transpositions = 0;
+		for (var i=0; i<s1.length; i++) {
+			var start = Math.max(0,i-matchDistance);
+			var end = Math.min(i+matchDistance+1,s2.length);
+			for (var j=start; j<end; j++) {
+				if (s2Matches[j]) continue;
+				if (s1[i] !== s2[j]) continue;
+				s1Matches[i]=true; s2Matches[j]=true; matches++; break;
+		}
+		}
+		if (matches===0) return 0;
+		var k = 0;
+		for (var i2=0; i2<s1.length; i2++) {
+			if (!s1Matches[i2]) continue;
+			while (!s2Matches[k]) k++;
+			if (s1[i2] !== s2[k]) transpositions++;
+			k++;
+		}
+		var jaro = (matches/s1.length + matches/s2.length + (matches-transpositions/2)/matches)/3;
+		// Winkler boost for common prefix
+		var prefix = 0;
+		for (var p=0; p<Math.min(4,s1.length,s2.length); p++) {
+			if (s1[p]===s2[p]) prefix++; else break;
+		}
+		return jaro + prefix*0.1*(1-jaro);
 	},
-   
-    //gs.info("Entry into - Script Include CI to Action Pick Winner: ");
-    
-	pick: function(a, b) {
 
-        gs.info("Entry into function - Script Include CI to Action Pick Winner: " + a + b);
-        // Read winner strategy from system property
-        var strat = (new x_angda_avante_c_0.AvnCmdbProperties())
-            .get('merge.winner_strategy', 'older');
-
-        // Strategy 1 - Older CI wins
-        if (strat == 'older') {
-
-            return new GlideDateTime(a.sys_created_on + '')
-                .compareTo(new GlideDateTime(b.sys_created_on + '')) < 0 ? a : b;
-        }
-
-        // Strategy 2 - CI with more populated attributes wins
-        if (strat == 'more_attributes') {
-
-            var countA = this._countAttrs(a);
-            var countB = this._countAttrs(b);
-
-            //gs.info("CI : " + a.name + " -> Populated Fields = " + countA);
-            //gs.info("CI : " + b.name + " -> Populated Fields = " + countB);
-
-            return (countA >= countB) ? a : b;
-        }
-
-        // Strategy 3 - Source Priority
-        // TODO : Implement in Story 39/40 (as per project roadmap)
-        gs.info("Script Include CI to Action Pick Winner: " + a);
-
-        return a;
+    _decide: function(score) {
+        var auto = this.props.getNum('match.auto_merge_threshold', 0.95);
+        var review = this.props.getNum('match.review_threshold', 0.60);
+        if (score >= auto) return 'Auto-merge';
+        if (score >= review) return 'Steward-review';
+        return 'Reject';
     },
 
-    _countAttrs: function(ci) {
+	persist: function(ciA, ciB, scoreResult) {
 
-        // Open the record using its actual class
-        var gr = new GlideRecord(ci.getValue('sys_class_name'));
+		var reject = this.props.getNum('match.reject_threshold', 0.30);
+		if (scoreResult.score < reject)
+			return null;
 
-        if (!gr.get(ci.getUniqueValue())) {
-            return 0;
-        }
+		var ms = new GlideRecord('x_angda_avante_c_0_match_score');
+		ms.initialize();
 
-        var fields = [
-            'name',
-            'manufacturer',
-            'company',
-            'model_id',
-            'assigned_to',
-            'asset',
-            'asset_tag',
-            'serial_number',
-            'os',
-            'os_version',
-            'os_service_pack',
-            'ram',
-            'cpu_count',
-            'cpu_core_count',
-            'cpu_speed',
-            'cpu_type',
-            'cpu_manufacturer',
-            'dns_domain',
-            'disk_space',
-            'description'
-        ];
+		ms.u_ci_a = ciA.sys_id + '';
+		ms.u_ci_b = ciB.sys_id + '';
+		ms.u_score = scoreResult.score;
+		ms.u_signals = JSON.stringify(scoreResult.signals);
+		ms.u_decision = scoreResult.decision;
+		ms.u_computed_at = new GlideDateTime();
 
-        var count = 0;
+		var mv = new GlideRecord('x_angda_avante_c_0_model_version');
+		mv.addQuery('u_is_active', true);
+		mv.setLimit(1);
+		mv.query();
 
-       // gs.info("----------- Checking CI : " + gr.getDisplayValue('name') + " -----------");
+		if (mv.next()) {
+			ms.u_model_version = mv.sys_id+'';
+			gs.info('model'+ms.u_model_version);
+		} else {
+			gs.warn('No active model version found!');
+		}
 
-        for (var i = 0; i < fields.length; i++) {
+		return ms.insert();
+	},
 
-            var fieldName = fields[i];
-
-            // Skip fields that don't exist for this CI class
-            if (!gr.isValidField(fieldName)) {
-                continue;
-            }
-
-            var value = gr.getValue(fieldName);
-
-            if (!gs.nil(value) && value !== '') {
-
-               // gs.info(fieldName + " = " + value);
-                count++;
-            }
-        }
-
-        gs.info("Total Populated Fields = " + count);
-
-        return count;
-    },
-
-    type: 'AvnCmdbWinnerPicker'
+    type: 'AvnCmdbScorer'
 };
