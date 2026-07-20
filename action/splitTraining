@@ -1,0 +1,28 @@
+(function execute(inputs, outputs) {
+
+    // Get samples from the Script Step input
+    var samples = inputs.samples || [];
+
+    // Create a copy
+    samples = samples.slice();
+
+    // Deterministic shuffle
+    for (var i = samples.length - 1; i > 0; i--) {
+
+        var j = (i * 7 + 3) % (i + 1);
+
+        var temp = samples[i];
+        samples[i] = samples[j];
+        samples[j] = temp;
+    }
+
+    // 80/20 split
+    var splitIndex = Math.floor(samples.length * 0.8);
+
+    outputs.training_set = samples.slice(0, splitIndex);
+    outputs.validation_set = samples.slice(splitIndex);
+
+    outputs.training_count = outputs.training_set.length;
+    outputs.validation_count = outputs.validation_set.length;
+
+})(inputs, outputs);
