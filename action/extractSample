@@ -1,0 +1,51 @@
+(function execute(inputs, outputs) {
+
+    var samples = [];
+    var positiveCount = 0;
+    var negativeCount = 0;
+
+    // -----------------------
+    // Positive Samples
+    // -----------------------
+
+    var pos = new GlideRecord('x_angda_avante_c_0_merge_log');
+    pos.addQuery('u_decision_type', 'Manual');
+    pos.addQuery('u_merged_at', '>', gs.daysAgo(90));
+    pos.query();
+
+    while (pos.next()) {
+
+        samples.push({
+            a: pos.u_winner.toString(),
+            b: pos.u_loser.toString(),
+            label: 1
+        });
+
+        positiveCount++;
+    }
+
+    // -----------------------
+    // Negative Samples
+    // -----------------------
+
+    var neg = new GlideRecord('x_angda_avante_c_0_not_duplicate');
+    neg.addQuery('u_recorded_at', '>', gs.daysAgo(90));
+    neg.query();
+
+    while (neg.next()) {
+
+        samples.push({
+            a: neg.u_ci_a.toString(),
+            b: neg.u_ci_b.toString(),
+            label: 0
+        });
+
+        negativeCount++;
+    }
+
+    outputs.training_samples = samples;
+    outputs.total_samples = samples.length;
+    outputs.positive_count = positiveCount;
+    outputs.negative_count = negativeCount;
+
+})(inputs, outputs);
